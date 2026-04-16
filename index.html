@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASWBD Profile Mapper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            outline: none;
+            margin: 8px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #b45309;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .category-row {
+            background: white;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2.5rem;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #f59e0b;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-bottom: 60px;
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <div class="max-w-md mx-auto px-4 pt-6">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-black text-amber-900 tracking-tight">ASWBD</h1>
+            <p class="text-sm text-gray-500 uppercase tracking-widest font-semibold">Sensory Profile Mapper</p>
+        </header>
+
+        <!-- Profile Selector / Creator -->
+        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Active Profile</label>
+                <select id="profileSelector" onchange="switchProfile()" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500">
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="newProfileName" placeholder="Rename current or Add new" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                <button onclick="createNewProfile()" class="bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform">Add New</button>
+            </div>
+        </div>
+
+        <!-- Rating Categories List -->
+        <div class="shadow-sm rounded-xl overflow-hidden border border-gray-100 mb-6" id="rater-container">
+            <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100">Aroma Intensities</div>
+            
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Malt Aroma</span>
+                    <span class="text-amber-700" data-label="aroma-malt">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-malt" onchange="saveCurrentState()" oninput="updateLabel('aroma-malt')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Hop Aroma</span>
+                    <span class="text-amber-700" data-label="aroma-hop">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-hop" onchange="saveCurrentState()" oninput="updateLabel('aroma-hop')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Yeast Aroma</span>
+                    <span class="text-amber-700" data-label="aroma-yeast">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-yeast" onchange="saveCurrentState()" oninput="updateLabel('aroma-yeast')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Special Aroma</span>
+                    <span class="text-amber-700" data-label="aroma-special">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-special" onchange="saveCurrentState()" oninput="updateLabel('aroma-special')">
+            </div>
+
+            <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-y border-gray-100">Palate & Structure</div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Sweetness</span>
+                    <span class="text-amber-700" data-label="sweetness">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-sweetness" onchange="saveCurrentState()" oninput="updateLabel('sweetness')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Sourness</span>
+                    <span class="text-amber-700" data-label="sourness">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-sourness" onchange="saveCurrentState()" oninput="updateLabel('sourness')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Bitterness</span>
+                    <span class="text-amber-700" data-label="bitterness">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-bitterness" onchange="saveCurrentState()" oninput="updateLabel('bitterness')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Body</span>
+                    <span class="text-amber-700" data-label="body">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-body" onchange="saveCurrentState()" oninput="updateLabel('body')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Astringency</span>
+                    <span class="text-amber-700" data-label="astringency">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-astringency" onchange="saveCurrentState()" oninput="updateLabel('astringency')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Carbonation</span>
+                    <span class="text-amber-700" data-label="carbonation">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-carbonation" onchange="saveCurrentState()" oninput="updateLabel('carbonation')">
+            </div>
+
+            <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-y border-gray-100">Finish & Strength</div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Strength Intensity</span>
+                    <span class="text-amber-700" data-label="strength">Low</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-strength" onchange="saveCurrentState()" oninput="updateLabel('strength')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Finish Length</span>
+                    <span class="text-amber-700" data-label="finish">Short</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-finish" onchange="saveCurrentState()" oninput="updateLabel('finish')">
+            </div>
+
+            <div class="category-row">
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span>Oxidation</span>
+                    <span class="text-amber-700" data-label="oxidation">None</span>
+                </div>
+                <input type="range" min="0" max="4" step="1" value="0" id="input-oxidation" onchange="saveCurrentState()" oninput="updateLabel('oxidation')">
+            </div>
+        </div>
+
+        <!-- Star Rating Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 text-center">
+            <h3 class="text-sm font-bold text-gray-400 uppercase mb-4">Overall Score</h3>
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" onclick="saveCurrentState()"><label for="star5">★</label>
+                <input type="radio" id="star4" name="rating" value="4" onclick="saveCurrentState()"><label for="star4">★</label>
+                <input type="radio" id="star3" name="rating" value="3" onclick="saveCurrentState()"><label for="star3">★</label>
+                <input type="radio" id="star2" name="rating" value="2" onclick="saveCurrentState()"><label for="star2">★</label>
+                <input type="radio" id="star1" name="rating" value="1" onclick="saveCurrentState()"><label for="star1">★</label>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">1 (Poor) to 5 (Excellent)</p>
+        </div>
+
+        <button onclick="deleteCurrentProfile()" class="w-full text-red-500 font-semibold py-3 text-sm">
+            Delete Current Profile
+        </button>
+    </div>
+
+    <script>
+        const intensityLabels = ["Low", "Med-Low", "Medium", "Med-High", "High"];
+        const finishLabels = ["Short", "Med-Short", "Medium", "Med-Long", "Long"];
+        const oxidationLabels = ["None", "Trace", "Noticeable", "Strong", "Dominant"];
+
+        // State management
+        let profiles = JSON.parse(localStorage.getItem('aswbd_profiles')) || { "Beer 1": createEmptyProfile() };
+        let activeProfile = localStorage.getItem('aswbd_active') || "Beer 1";
+
+        function createEmptyProfile() {
+            return {
+                sliders: {},
+                stars: 0
+            };
+        }
+
+        function updateLabel(id) {
+            const val = document.getElementById(`input-${id}`).value;
+            const display = document.querySelector(`[data-label="${id}"]`);
+            
+            if (id === 'finish') {
+                display.innerText = finishLabels[val];
+            } else if (id === 'oxidation') {
+                display.innerText = oxidationLabels[val];
+            } else {
+                display.innerText = intensityLabels[val];
+            }
+        }
+
+        function saveCurrentState() {
+            const data = {
+                sliders: {},
+                stars: document.querySelector('input[name="rating"]:checked')?.value || 0
+            };
+
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                const id = input.id.replace('input-', '');
+                data.sliders[id] = input.value;
+            });
+
+            profiles[activeProfile] = data;
+            localStorage.setItem('aswbd_profiles', JSON.stringify(profiles));
+            localStorage.setItem('aswbd_active', activeProfile);
+        }
+
+        function loadProfile(name) {
+            activeProfile = name;
+            const data = profiles[name];
+
+            // Load sliders
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                const id = input.id.replace('input-', '');
+                input.value = data.sliders[id] || 0;
+                updateLabel(id);
+            });
+
+            // Load stars
+            const starInput = document.getElementById(`star${data.stars}`);
+            if (starInput) starInput.checked = true;
+            else document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+
+            document.getElementById('profileSelector').value = name;
+        }
+
+        function createNewProfile() {
+            const nameInput = document.getElementById('newProfileName');
+            let name = nameInput.value.trim();
+            
+            // If no name provided, generate "Beer X"
+            if (!name) {
+                const beerCount = Object.keys(profiles).length + 1;
+                name = `Beer ${beerCount}`;
+                // Ensure name is unique
+                while (profiles[name]) {
+                    name = `Beer ${Math.floor(Math.random() * 1000)}`;
+                }
+            }
+
+            if (profiles[name]) return;
+
+            profiles[name] = createEmptyProfile();
+            nameInput.value = '';
+            refreshSelector();
+            loadProfile(name);
+            saveCurrentState();
+        }
+
+        function switchProfile() {
+            const select = document.getElementById('profileSelector');
+            loadProfile(select.value);
+        }
+
+        function refreshSelector() {
+            const select = document.getElementById('profileSelector');
+            select.innerHTML = '';
+            // Sort keys so Beer 1, Beer 2 etc stay in order if possible
+            Object.keys(profiles).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+        }
+
+        function deleteCurrentProfile() {
+            if (Object.keys(profiles).length <= 1) return;
+            delete profiles[activeProfile];
+            activeProfile = Object.keys(profiles)[0];
+            refreshSelector();
+            loadProfile(activeProfile);
+            saveCurrentState();
+        }
+
+        // Initialize
+        window.onload = () => {
+            refreshSelector();
+            loadProfile(activeProfile);
+        };
+    </script>
+</body>
+</html>
