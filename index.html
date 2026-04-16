@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ASWBD Profile Mapper</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SortableJS for mobile-friendly drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         input[type="range"] {
             -webkit-appearance: none;
@@ -34,33 +36,38 @@
             border-bottom: 1px solid #f3f4f6;
         }
 
-        .star-rating {
+        .rank-item {
             display: flex;
-            flex-direction: row-reverse;
-            justify-content: center;
+            align-items: center;
+            background: white;
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: grab;
+            touch-action: none;
+            border: 2px solid transparent;
         }
 
-        .star-rating input {
-            display: none;
+        .rank-item.active-item {
+            border-color: #fbbf24;
         }
 
-        .star-rating label {
-            font-size: 2.5rem;
-            color: #d1d5db;
-            cursor: pointer;
-            transition: color 0.2s;
+        .rank-item.unrated {
+            background: #f9fafb;
+            color: #9ca3af;
+            border: 1px dashed #d1d5db;
         }
 
-        .star-rating label:hover,
-        .star-rating label:hover ~ label,
-        .star-rating input:checked ~ label {
-            color: #f59e0b;
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #fef3c7;
         }
 
         body {
             background-color: #f3f4f6;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding-bottom: 60px;
+            padding-bottom: 80px;
         }
     </style>
 </head>
@@ -77,11 +84,10 @@
             <div>
                 <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Active Profile</label>
                 <select id="profileSelector" onchange="switchProfile()" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500">
-                    <!-- Options populated by JS -->
                 </select>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="newProfileName" placeholder="Rename current or Add new" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                <input type="text" id="newProfileName" placeholder="Rename or Add new" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
                 <button onclick="createNewProfile()" class="bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform">Add New</button>
             </div>
         </div>
@@ -89,127 +95,24 @@
         <!-- Rating Categories List -->
         <div class="shadow-sm rounded-xl overflow-hidden border border-gray-100 mb-6" id="rater-container">
             <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100">Aroma Intensities</div>
-            
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Malt Aroma</span>
-                    <span class="text-amber-700" data-label="aroma-malt">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-malt" onchange="saveCurrentState()" oninput="updateLabel('aroma-malt')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Hop Aroma</span>
-                    <span class="text-amber-700" data-label="aroma-hop">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-hop" onchange="saveCurrentState()" oninput="updateLabel('aroma-hop')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Yeast Aroma</span>
-                    <span class="text-amber-700" data-label="aroma-yeast">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-yeast" onchange="saveCurrentState()" oninput="updateLabel('aroma-yeast')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Special Aroma</span>
-                    <span class="text-amber-700" data-label="aroma-special">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-aroma-special" onchange="saveCurrentState()" oninput="updateLabel('aroma-special')">
-            </div>
+            <div id="aroma-sections"></div> <!-- Populated by JS -->
 
             <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-y border-gray-100">Palate & Structure</div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Sweetness</span>
-                    <span class="text-amber-700" data-label="sweetness">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-sweetness" onchange="saveCurrentState()" oninput="updateLabel('sweetness')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Sourness</span>
-                    <span class="text-amber-700" data-label="sourness">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-sourness" onchange="saveCurrentState()" oninput="updateLabel('sourness')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Bitterness</span>
-                    <span class="text-amber-700" data-label="bitterness">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-bitterness" onchange="saveCurrentState()" oninput="updateLabel('bitterness')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Body</span>
-                    <span class="text-amber-700" data-label="body">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-body" onchange="saveCurrentState()" oninput="updateLabel('body')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Astringency</span>
-                    <span class="text-amber-700" data-label="astringency">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-astringency" onchange="saveCurrentState()" oninput="updateLabel('astringency')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Carbonation</span>
-                    <span class="text-amber-700" data-label="carbonation">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-carbonation" onchange="saveCurrentState()" oninput="updateLabel('carbonation')">
-            </div>
+            <div id="palate-sections"></div> <!-- Populated by JS -->
 
             <div class="bg-gray-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-y border-gray-100">Finish & Strength</div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Strength Intensity</span>
-                    <span class="text-amber-700" data-label="strength">Low</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-strength" onchange="saveCurrentState()" oninput="updateLabel('strength')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Finish Length</span>
-                    <span class="text-amber-700" data-label="finish">Short</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-finish" onchange="saveCurrentState()" oninput="updateLabel('finish')">
-            </div>
-
-            <div class="category-row">
-                <div class="flex justify-between text-sm font-medium mb-1">
-                    <span>Oxidation</span>
-                    <span class="text-amber-700" data-label="oxidation">None</span>
-                </div>
-                <input type="range" min="0" max="4" step="1" value="0" id="input-oxidation" onchange="saveCurrentState()" oninput="updateLabel('oxidation')">
-            </div>
+            <div id="finish-sections"></div> <!-- Populated by JS -->
         </div>
 
-        <!-- Star Rating Section -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 text-center">
-            <h3 class="text-sm font-bold text-gray-400 uppercase mb-4">Overall Score</h3>
-            <div class="star-rating">
-                <input type="radio" id="star5" name="rating" value="5" onclick="saveCurrentState()"><label for="star5">★</label>
-                <input type="radio" id="star4" name="rating" value="4" onclick="saveCurrentState()"><label for="star4">★</label>
-                <input type="radio" id="star3" name="rating" value="3" onclick="saveCurrentState()"><label for="star3">★</label>
-                <input type="radio" id="star2" name="rating" value="2" onclick="saveCurrentState()"><label for="star2">★</label>
-                <input type="radio" id="star1" name="rating" value="1" onclick="saveCurrentState()"><label for="star1">★</label>
+        <!-- Ranking Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-sm font-bold text-gray-400 uppercase">Preference Ranking</h3>
+                <span class="text-[10px] text-gray-400 uppercase">Drag to reorder</span>
             </div>
-            <p class="text-xs text-gray-400 mt-2">1 (Poor) to 5 (Excellent)</p>
+            <div id="rankingList">
+                <!-- Ranked items injected here -->
+            </div>
         </div>
 
         <button onclick="deleteCurrentProfile()" class="w-full text-red-500 font-semibold py-3 text-sm">
@@ -218,86 +121,118 @@
     </div>
 
     <script>
-        const intensityLabels = ["Low", "Med-Low", "Medium", "Med-High", "High"];
-        const finishLabels = ["Short", "Med-Short", "Medium", "Med-Long", "Long"];
-        const oxidationLabels = ["None", "Trace", "Noticeable", "Strong", "Dominant"];
+        const categories = {
+            aroma: ['malt', 'hop', 'yeast', 'special'],
+            palate: ['sweetness', 'sourness', 'bitterness', 'body', 'astringency', 'carbonation'],
+            finish: ['strength', 'finish', 'oxidation']
+        };
 
-        // State management
+        const labels = {
+            intensity: ["Low", "Med-Low", "Medium", "Med-High", "High"],
+            finish: ["Short", "Med-Short", "Medium", "Med-Long", "Long"],
+            oxidation: ["None", "Trace", "Noticeable", "Strong", "Dominant"]
+        };
+
         let profiles = JSON.parse(localStorage.getItem('aswbd_profiles')) || { "Beer 1": createEmptyProfile() };
         let activeProfile = localStorage.getItem('aswbd_active') || "Beer 1";
+        let rankOrder = JSON.parse(localStorage.getItem('aswbd_rank')) || ["Beer 1"];
 
         function createEmptyProfile() {
-            return {
-                sliders: {},
-                stars: 0
+            return { sliders: {}, rated: false };
+        }
+
+        function buildUI() {
+            const renderRows = (containerId, keys) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = keys.map(key => `
+                    <div class="category-row">
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span class="capitalize">${key.replace('-', ' ')}</span>
+                            <span class="text-amber-700" data-label="${key}">Low</span>
+                        </div>
+                        <input type="range" min="0" max="4" step="1" value="0" id="input-${key}" 
+                               onchange="handleSliderChange()" oninput="updateLabel('${key}')">
+                    </div>
+                `).join('');
             };
+
+            renderRows('aroma-sections', categories.aroma);
+            renderRows('palate-sections', categories.palate);
+            renderRows('finish-sections', categories.finish);
         }
 
         function updateLabel(id) {
             const val = document.getElementById(`input-${id}`).value;
             const display = document.querySelector(`[data-label="${id}"]`);
-            
-            if (id === 'finish') {
-                display.innerText = finishLabels[val];
-            } else if (id === 'oxidation') {
-                display.innerText = oxidationLabels[val];
-            } else {
-                display.innerText = intensityLabels[val];
-            }
+            if (id === 'finish') display.innerText = labels.finish[val];
+            else if (id === 'oxidation') display.innerText = labels.oxidation[val];
+            else display.innerText = labels.intensity[val];
+        }
+
+        function handleSliderChange() {
+            profiles[activeProfile].rated = true;
+            saveCurrentState();
+            renderRanking();
         }
 
         function saveCurrentState() {
-            const data = {
-                sliders: {},
-                stars: document.querySelector('input[name="rating"]:checked')?.value || 0
-            };
-
+            const currentData = profiles[activeProfile];
             document.querySelectorAll('input[type="range"]').forEach(input => {
                 const id = input.id.replace('input-', '');
-                data.sliders[id] = input.value;
+                currentData.sliders[id] = input.value;
             });
 
-            profiles[activeProfile] = data;
             localStorage.setItem('aswbd_profiles', JSON.stringify(profiles));
             localStorage.setItem('aswbd_active', activeProfile);
+            localStorage.setItem('aswbd_rank', JSON.stringify(rankOrder));
         }
 
         function loadProfile(name) {
             activeProfile = name;
             const data = profiles[name];
-
-            // Load sliders
             document.querySelectorAll('input[type="range"]').forEach(input => {
                 const id = input.id.replace('input-', '');
                 input.value = data.sliders[id] || 0;
                 updateLabel(id);
             });
-
-            // Load stars
-            const starInput = document.getElementById(`star${data.stars}`);
-            if (starInput) starInput.checked = true;
-            else document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
-
             document.getElementById('profileSelector').value = name;
+            renderRanking();
+        }
+
+        function renderRanking() {
+            const list = document.getElementById('rankingList');
+            list.innerHTML = '';
+            
+            rankOrder.forEach((name, index) => {
+                const isRated = profiles[name]?.rated;
+                const isActive = name === activeProfile;
+                const item = document.createElement('div');
+                item.className = `rank-item ${!isRated ? 'unrated' : ''} ${isActive ? 'active-item' : ''}`;
+                item.setAttribute('data-id', name);
+                item.innerHTML = `
+                    <span class="text-xs font-bold mr-3 opacity-50">${index + 1}</span>
+                    <span class="flex-1 font-semibold truncate">${name}</span>
+                    <span class="text-[10px] uppercase font-bold px-2 py-1 rounded ${isRated ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-500'}">
+                        ${isRated ? 'Rated' : 'New'}
+                    </span>
+                `;
+                item.onclick = () => loadProfile(name);
+                list.appendChild(item);
+            });
         }
 
         function createNewProfile() {
             const nameInput = document.getElementById('newProfileName');
             let name = nameInput.value.trim();
-            
-            // If no name provided, generate "Beer X"
             if (!name) {
-                const beerCount = Object.keys(profiles).length + 1;
-                name = `Beer ${beerCount}`;
-                // Ensure name is unique
-                while (profiles[name]) {
-                    name = `Beer ${Math.floor(Math.random() * 1000)}`;
-                }
+                let i = 1;
+                while (profiles[`Beer ${i}`]) i++;
+                name = `Beer ${i}`;
             }
-
             if (profiles[name]) return;
 
             profiles[name] = createEmptyProfile();
+            rankOrder.push(name); // Adds to bottom
             nameInput.value = '';
             refreshSelector();
             loadProfile(name);
@@ -305,35 +240,42 @@
         }
 
         function switchProfile() {
-            const select = document.getElementById('profileSelector');
-            loadProfile(select.value);
+            loadProfile(document.getElementById('profileSelector').value);
         }
 
         function refreshSelector() {
             const select = document.getElementById('profileSelector');
-            select.innerHTML = '';
-            // Sort keys so Beer 1, Beer 2 etc stay in order if possible
-            Object.keys(profiles).forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                select.appendChild(opt);
-            });
+            select.innerHTML = Object.keys(profiles).map(name => `<option value="${name}">${name}</option>`).join('');
         }
 
         function deleteCurrentProfile() {
             if (Object.keys(profiles).length <= 1) return;
             delete profiles[activeProfile];
-            activeProfile = Object.keys(profiles)[0];
+            rankOrder = rankOrder.filter(n => n !== activeProfile);
+            activeProfile = rankOrder[0];
             refreshSelector();
             loadProfile(activeProfile);
             saveCurrentState();
         }
 
-        // Initialize
         window.onload = () => {
+            buildUI();
             refreshSelector();
             loadProfile(activeProfile);
+
+            new Sortable(document.getElementById('rankingList'), {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: function() {
+                    const newOrder = [];
+                    document.querySelectorAll('#rankingList .rank-item').forEach(el => {
+                        newOrder.push(el.getAttribute('data-id'));
+                    });
+                    rankOrder = newOrder;
+                    saveCurrentState();
+                    renderRanking();
+                }
+            });
         };
     </script>
 </body>
